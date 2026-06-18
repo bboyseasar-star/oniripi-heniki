@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>鬼リピ〜変域マスター〜</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=Outfit:wght@400;600;700;900&display=swap" rel="stylesheet">
+  <script>
+    window.MathJax = {
+      tex: { inlineMath: [['\\(', '\\)']] },
+      options: { skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre'] },
+      startup: { typeset: false }
+    };
+  </script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="screen-start" class="screen active">
+    <main class="start-card">
+      <div class="app-logo">🔥</div>
+      <h1 class="app-title">鬼リピ</h1>
+      <p class="app-subtitle">〜変域マスター〜</p>
+
+      <section class="level-select" aria-label="レベル選択">
+        <p class="level-label">レベルをえらぼう</p>
+        <div class="level-btns">
+          <button class="level-btn active" data-level="1"><b>Lv.1</b><span>xからy</span></button>
+          <button class="level-btn" data-level="2"><b>Lv.2</b><span>逆算あり</span></button>
+          <button class="level-btn" data-level="3"><b>Lv.3</b><span>総合・グラフ</span></button>
+        </div>
+      </section>
+
+      <div class="highscore-box"><span>👑 最高スコア</span><strong id="high-score">--</strong><span>点</span></div>
+      <section class="history-box">
+        <div class="history-header"><span>📋 学習履歴</span><button id="reset-btn" class="btn-ghost-sm">リセット</button></div>
+        <div id="history-list" class="history-list">まだ記録がないよ！</div>
+      </section>
+      <button id="start-btn" class="btn-primary lg">スタート！</button>
+    </main>
+  </div>
+
+  <div id="screen-quiz" class="screen">
+    <header class="quiz-header">
+      <button id="quit-btn" class="quit-btn">ホーム</button>
+      <div class="header-brand">鬼リピ <span id="level-tag" class="level-tag">Lv.1</span></div>
+      <div class="header-progress">
+        <span id="q-counter">Q 1 / 5</span>
+        <div class="progress-bar"><div id="progress-fill" class="progress-fill"></div></div>
+      </div>
+      <div id="score-display" class="header-score">0点</div>
+    </header>
+
+    <main class="quiz-main">
+      <section class="center-panel">
+        <div class="work-panel">
+          <div class="question-card">
+            <p id="question-label" class="question-label"></p>
+            <div id="question-display" class="equation-display"></div>
+            <div class="graph-wrap"><canvas id="graph-canvas" class="graph-canvas"></canvas></div>
+            <div id="question-extra" class="question-extra"></div>
+          </div>
+
+          <div id="response-row" class="response-row">
+            <div class="answer-zone">
+              <div id="answer-grid" class="answer-grid"></div>
+              <p id="input-note" class="input-note">※変域は「最小値≦文字≦最大値」まで入力してね。</p>
+              <div class="helper-keys">
+                <button id="le-key" class="hkey" data-cmd="le">≦</button>
+                <button class="hkey" data-cmd="frac">分数</button>
+                <button class="hkey" data-cmd="minus">−</button>
+                <button class="hkey" data-cmd="clear">クリア</button>
+              </div>
+            </div>
+            <div id="feedback-box" class="feedback-box hidden"></div>
+          </div>
+        </div>
+
+        <aside class="hint-area">
+          <button id="hint-btn" class="btn-hint">ヒント</button>
+          <div id="hint-warning" class="hint-warning hidden">次のヒントは答えだよ。見るとこの問題は不正解で確定します。</div>
+          <div id="hint-list" class="hint-list"></div>
+        </aside>
+      </section>
+    </main>
+
+    <footer class="quiz-footer">
+      <button id="submit-btn" class="btn-primary">判定する</button>
+      <button id="next-btn" class="btn-secondary hidden">次へ</button>
+    </footer>
+  </div>
+
+  <div id="screen-result" class="screen">
+    <main class="result-card">
+      <div class="result-header">
+        <h2>結果発表！</h2>
+        <div id="result-score" class="result-score"></div>
+        <div id="result-badge" class="result-badge"></div>
+      </div>
+      <section class="review-section">
+        <h3>振り返り</h3>
+        <div id="review-list" class="review-list"></div>
+      </section>
+      <div class="result-actions">
+        <button id="retry-btn" class="btn-primary">もう一度</button>
+        <button id="review-wrong-btn" class="btn-secondary hidden">まちがいだけ復習</button>
+        <button id="home-btn" class="btn-secondary">ホームへ</button>
+      </div>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <script src="https://unpkg.com/mathlive@0.98.4/dist/mathlive.min.js"></script>
+  <script src="questions.js"></script>
+  <script src="main.js"></script>
+</body>
+</html>
