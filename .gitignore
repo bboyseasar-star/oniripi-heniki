@@ -1,0 +1,9 @@
+.DS_Store
+AGENTS.md
+CLAUDE.md
+.env
+.env.*
+*.pem
+*.key
+credentials*.json
+*secret*

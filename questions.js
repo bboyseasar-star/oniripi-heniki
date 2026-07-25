@@ -33,7 +33,7 @@ const HenikiQuestions = (() => {
   const bankA = lv => {
     const a = lv === 1
       ? frac(rnd(1, 5))
-      : choice([frac(-5), frac(-4), frac(-3), frac(-2), frac(-1), frac(1), frac(2), frac(3), frac(4), frac(5), frac(1, 2), frac(-1, 2), frac(2, 3), frac(-2, 3)]);
+      : choice([frac(-5), frac(-4), frac(-3), frac(-2), frac(-1), frac(1), frac(2), frac(3), frac(4), frac(5), frac(1, 2), frac(-1, 2)]);
     const b = frac(rnd(-8, 8));
     const x1 = rnd(-6, 4), x2 = x1 + rnd(2, 7);
     const y1 = fx(a, b, x1), y2 = fx(a, b, x2), [lo, hi] = minmax(y1, y2);
@@ -88,7 +88,7 @@ const HenikiQuestions = (() => {
       id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random()),
       type: 'C', a, b, x1, x2, y1, y2, answers: [a, b],
       label: '変域から \\( a,b \\) を求めなさい',
-      question: `\\( y=ax+b \\) で、\\( ${x1}\\leqq x\\leqq ${x2} \\) のとき \\( ${tex(ylo)}\\leqq y\\leqq ${tex(yhi)} \\) である。\\( a,b \\) の値を求めなさい。`,
+      question: `\\( y=ax+b \\) で、\\( a${a.n > 0 ? '>' : '<'}0 \\)、\\( ${x1}\\leqq x\\leqq ${x2} \\) のとき \\( ${tex(ylo)}\\leqq y\\leqq ${tex(yhi)} \\) である。\\( a,b \\) の値を求めなさい。`,
       extra: '端点どうしの対応を見つけるのがポイントです。',
       hints: [
         a.n > 0 ? '右上がりなので小さい \\( x \\) に小さい \\( y \\) が対応します。' : '右下がりなので小さい \\( x \\) に大きい \\( y \\) が対応します。',

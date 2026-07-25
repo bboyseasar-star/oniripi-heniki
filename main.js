@@ -47,7 +47,10 @@ function ansTex(q) {
   return `\\( ${t(q.answers[0])}\\leqq x\\leqq ${t(q.answers[1])},\\ ${t(q.answers[2])}\\leqq y\\leqq ${t(q.answers[3])} \\)`;
 }
 function setScreen(id) { $$('.screen').forEach(s => s.classList.remove('active')); $(id).classList.add('active'); }
-function typeset() { if (window.MathJax?.typesetPromise) MathJax.typesetPromise(); }
+function typeset() {
+  if (window.MathJax?.typesetPromise) MathJax.typesetPromise();
+  else window.addEventListener('mathjax-ready', typeset, { once: true });
+}
 function renderStart() {
   $('#high-score').textContent = Number(storage.get(`${KEY}-high-${level}`, 0)) || '--';
   const hist = JSON.parse(storage.get(`${KEY}-hist`, '[]'));

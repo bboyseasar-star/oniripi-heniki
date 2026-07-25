@@ -10,7 +10,13 @@
     window.MathJax = {
       tex: { inlineMath: [['\\(', '\\)']] },
       options: { skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre'] },
-      startup: { typeset: false }
+      startup: {
+        typeset: false,
+        ready() {
+          MathJax.startup.defaultReady();
+          window.dispatchEvent(new Event('mathjax-ready'));
+        }
+      }
     };
   </script>
   <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
@@ -38,6 +44,7 @@
         <div id="history-list" class="history-list">まだ記録がないよ！</div>
       </section>
       <button id="start-btn" class="btn-primary lg">スタート！</button>
+      <p class="legal-links"><a href="NOTICE.md" target="_blank" rel="noopener">利用条件・出典・プライバシー</a><span aria-hidden="true">｜</span><a href="LICENSE" target="_blank" rel="noopener">LICENSE</a></p>
     </main>
   </div>
 
