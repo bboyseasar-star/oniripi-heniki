@@ -12,6 +12,7 @@ const storage = (() => {
 })();
 
 let level = 1, qi = 0, score = 0, questions = [], current = null, hintsShown = 0, answered = false, focusField = null, reviewMode = false, reviews = [];
+let graphAnimation = null, graphManualX = null, graphState = null;
 const KEY = 'oniripi-heniki';
 
 function gcd(a, b) { a = Math.abs(a); b = Math.abs(b); while (b) [a, b] = [b, a % b]; return a || 1; }
@@ -60,7 +61,7 @@ function start(list = null) {
   qi = 0; score = 0; reviews = []; reviewMode = !!list; questions = list || HenikiQuestions.make(level); setScreen('#screen-quiz'); showQuestion();
 }
 function showQuestion() {
-  current = questions[qi]; hintsShown = 0; answered = false; focusField = null;
+  current = questions[qi]; hintsShown = 0; answered = false; focusField = null; graphManualX = null;
   $('#level-tag').textContent = `Lv.${level}`; $('#q-counter').textContent = `Q ${qi + 1} / ${questions.length}`;
   $('#progress-fill').style.width = `${qi / questions.length * 100}%`; $('#score-display').textContent = `${score}点`;
   $('#question-label').innerHTML = current.label; $('#question-display').innerHTML = current.question; $('#question-extra').innerHTML = current.extra;
@@ -185,8 +186,17 @@ function insertKey(cmd) {
 }
 function redrawGraph(forceFull = false) {
   if (!current) return;
+  if (graphAnimation) cancelAnimationFrame(graphAnimation);
   const reveal = forceFull || answered || current.type === 'D' ? 3 : hintsShown;
   drawGraph(current, reveal);
+  if (current.type === 'A' && reveal >= 1 && reveal < 3 && !document.hidden) {
+    const animate = now => {
+      if (!current || answered || current.type !== 'A' || hintsShown < 1 || hintsShown >= 3 || document.hidden) return;
+      drawGraph(current, reveal, now);
+      graphAnimation = requestAnimationFrame(animate);
+    };
+    graphAnimation = requestAnimationFrame(animate);
+  }
 }
 function niceStep(range) {
   if (range <= 12) return 1;
@@ -207,7 +217,10 @@ function graphBounds(q, w, h) {
   const xs = [0, q.x1, q.x2];
   let [xMin, xMax, xStep] = niceBounds(Math.min(...xs), Math.max(...xs));
   let [yMin, yMax, yStep] = niceBounds(Math.min(...ys), Math.max(...ys));
-  const plotRatio = Math.max(1, (w - 56) / Math.max(1, h - 36));
+  // xからyを読む問題では、対象区間を画面の中央で十分に追える倍率を優先する。
+  if (q.type === 'A') return { xMin, xMax, yMin, yMax, xStep, yStep };
+  // 横長画面でも、今回使う区間が細い線に見えないように表示倍率を抑える。
+  const plotRatio = Math.min(1.8, Math.max(1, (w - 56) / Math.max(1, h - 36)));
   let xSpan = xMax - xMin;
   let ySpan = yMax - yMin;
   if (xSpan / ySpan < plotRatio) {
@@ -257,6 +270,28 @@ function drawDashed(ctx, x1, y1, x2, y2, color) {
   ctx.stroke();
   ctx.restore();
 }
+function drawLineSegment(ctx, px, py, q, fromX, toX, color, width, dash = []) {
+  ctx.save();
+  ctx.strokeStyle = color; ctx.lineWidth = width; ctx.lineCap = 'round'; ctx.setLineDash(dash);
+  ctx.beginPath();
+  ctx.moveTo(px(fromX), py(HenikiQuestions.val(HenikiQuestions.fx(q.a, q.b, fromX))));
+  ctx.lineTo(px(toX), py(HenikiQuestions.val(HenikiQuestions.fx(q.a, q.b, toX))));
+  ctx.stroke(); ctx.restore();
+}
+function drawLegend(ctx, right, top) {
+  ctx.save();
+  ctx.font = '700 12px Outfit, sans-serif'; ctx.textBaseline = 'middle';
+  const x = right - 148, y = top + 12;
+  ctx.fillStyle = 'rgba(255,255,255,.92)'; ctx.strokeStyle = '#cbd5e1'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.roundRect(x, y, 140, 44, 8); ctx.fill(); ctx.stroke();
+  ctx.strokeStyle = '#94a3b8'; ctx.setLineDash([5, 5]); ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(x + 9, y + 14); ctx.lineTo(x + 32, y + 14); ctx.stroke();
+  ctx.setLineDash([]); ctx.fillStyle = '#475569'; ctx.fillText('変域の外', x + 39, y + 14);
+  ctx.strokeStyle = '#f97316'; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(x + 9, y + 31); ctx.lineTo(x + 32, y + 31); ctx.stroke();
+  ctx.fillStyle = '#f97316'; ctx.beginPath(); ctx.arc(x + 21, y + 31, 4, 0, Math.PI * 2); ctx.fill();
+  ctx.fillText('動く範囲', x + 39, y + 31); ctx.restore();
+}
 function graphNumber(n) {
   const rounded = Math.round(n * 10) / 10;
   return Number.isInteger(rounded) ? String(rounded) : String(rounded.toFixed(1));
@@ -283,7 +318,7 @@ function drawYRange(ctx, yLo, yHi, py, axisX) {
   drawPoint(ctx, axisX, py(yLo), '#ef4444', 6);
   drawPoint(ctx, axisX, py(yHi), '#ef4444', 6);
 }
-function drawGraph(q, reveal) {
+function drawGraph(q, reveal, now = performance.now()) {
   const c = $('#graph-canvas'), dpr = window.devicePixelRatio || 1, rect = c.getBoundingClientRect();
   c.width = Math.max(1, rect.width * dpr); c.height = Math.max(1, rect.height * dpr);
   const ctx = c.getContext('2d'), w = rect.width, h = rect.height;
@@ -329,17 +364,17 @@ function drawGraph(q, reveal) {
   if (yMin <= 0 && yMax >= 0) { ctx.beginPath(); ctx.moveTo(left, py(0)); ctx.lineTo(right, py(0)); ctx.stroke(); }
   if (xMin <= 0 && xMax >= 0) { ctx.beginPath(); ctx.moveTo(px(0), top); ctx.lineTo(px(0), bottom); ctx.stroke(); }
 
-  const xL = xMin, xR = xMax, yL = HenikiQuestions.val(HenikiQuestions.fx(q.a, q.b, xL)), yR = HenikiQuestions.val(HenikiQuestions.fx(q.a, q.b, xR));
-  ctx.strokeStyle = '#2563eb';
-  ctx.lineWidth = 4;
-  ctx.lineCap = 'round';
-  ctx.beginPath(); ctx.moveTo(px(xL), py(yL)); ctx.lineTo(px(xR), py(yR)); ctx.stroke();
-
   const p1 = { x: q.x1, y: HenikiQuestions.val(q.y1) };
   const p2 = { x: q.x2, y: HenikiQuestions.val(q.y2) };
   const yLo = Math.min(p1.y, p2.y), yHi = Math.max(p1.y, p2.y);
   const axisY = clampY(0);
   const axisX = clampX(0);
+  const explore = q.type === 'A' && reveal >= 1;
+  if (explore) {
+    drawLineSegment(ctx, px, py, q, xMin, q.x1, '#94a3b8', 2.5, [8, 7]);
+    drawLineSegment(ctx, px, py, q, q.x1, q.x2, '#f97316', 5);
+    drawLineSegment(ctx, px, py, q, q.x2, xMax, '#94a3b8', 2.5, [8, 7]);
+  } else drawLineSegment(ctx, px, py, q, xMin, xMax, '#2563eb', 4);
   if (reveal >= 1 && reveal < 3) {
     if (q.type === 'B') drawYRange(ctx, yLo, yHi, py, axisX);
     else drawXRange(ctx, q, px, axisY);
@@ -351,6 +386,15 @@ function drawGraph(q, reveal) {
       drawPoint(ctx, px(p.x), py(p.y), '#475569', 6);
     });
   }
+  if (explore && reveal < 3) {
+    const phase = (Math.sin(now / 780) + 1) / 2;
+    const movingX = graphManualX == null ? q.x1 + (q.x2 - q.x1) * phase : graphManualX;
+    const movingY = HenikiQuestions.val(HenikiQuestions.fx(q.a, q.b, movingX));
+    drawDashed(ctx, px(movingX), axisY, px(movingX), py(movingY), '#2563eb');
+    drawDashed(ctx, axisX, py(movingY), px(movingX), py(movingY), '#ef4444');
+    drawPoint(ctx, px(movingX), py(movingY), '#f97316', 10);
+    graphState = { left, right, xMin, xMax, x1: q.x1, x2: q.x2 };
+  } else graphState = null;
   if (reveal >= 3) {
     ctx.strokeStyle = '#f97316';
     ctx.lineWidth = 10;
@@ -385,7 +429,20 @@ function drawGraph(q, reveal) {
   ctx.fillText('y', clampX(0) + 10, top + 12);
 
   if (reveal >= 1 && reveal < 3) {
-    if (q.type === 'B') {
+    if (q.type === 'A') {
+      drawLegend(ctx, right, top);
+      drawLabel(ctx, '← ドラッグ / 矢印キーで点を動かす →', (px(q.x1) + px(q.x2)) / 2, top + 72, '#9a3412');
+      drawLabel(ctx, String(q.x1), px(q.x1), axisY + 24, '#1d4ed8');
+      drawLabel(ctx, String(q.x2), px(q.x2), axisY + 24, '#1d4ed8');
+      drawLabel(ctx, 'xの変域', (px(q.x1) + px(q.x2)) / 2, Math.min(bottom + 18, axisY + 44), '#1d4ed8');
+      if (reveal >= 2) {
+        const lowPoint = p1.y === yLo ? p1 : p2;
+        const highPoint = p1.y === yHi ? p1 : p2;
+        const labelX = point => px(point.x) > right - 205 ? px(point.x) - 70 : px(point.x) + 70;
+        drawLabel(ctx, `yの最小 = ${graphNumber(yLo)}`, labelX(lowPoint), py(yLo) - 16, '#dc2626');
+        drawLabel(ctx, `yの最大 = ${graphNumber(yHi)}`, labelX(highPoint), py(yHi) + 16, '#dc2626');
+      }
+    } else if (q.type === 'B') {
       drawLabel(ctx, graphNumber(yLo), axisX - 18, py(yLo), '#ef4444', 'right');
       drawLabel(ctx, graphNumber(yHi), axisX - 18, py(yHi), '#ef4444', 'right');
       drawLabel(ctx, 'yの変域', Math.max(14, axisX - 42), (py(yLo) + py(yHi)) / 2, '#ef4444', 'center');
@@ -415,5 +472,35 @@ $('#retry-btn').addEventListener('click', () => start());
 $('#home-btn').addEventListener('click', () => { setScreen('#screen-start'); renderStart(); });
 $('#reset-btn').addEventListener('click', () => { if (confirm('学習履歴と最高スコアをリセットしますか？')) { storage.del(`${KEY}-hist`); [1, 2, 3].forEach(l => storage.del(`${KEY}-high-${l}`)); renderStart(); } });
 $$('.hkey').forEach(b => b.addEventListener('click', () => insertKey(b.dataset.cmd)));
+function setGraphPointFromClientX(clientX) {
+  if (!graphState || !current || current.type !== 'A' || hintsShown < 1 || answered) return;
+  const rect = $('#graph-canvas').getBoundingClientRect();
+  const plotX = Math.max(graphState.left, Math.min(graphState.right, clientX - rect.left));
+  const rawX = graphState.xMin + (plotX - graphState.left) / (graphState.right - graphState.left) * (graphState.xMax - graphState.xMin);
+  graphManualX = Math.max(graphState.x1, Math.min(graphState.x2, rawX));
+  redrawGraph();
+}
+$('#graph-canvas').addEventListener('pointerdown', ev => {
+  if (!graphState) return;
+  ev.preventDefault();
+  $('#graph-canvas').focus({ preventScroll: true });
+  $('#graph-canvas').setPointerCapture(ev.pointerId);
+  setGraphPointFromClientX(ev.clientX);
+});
+$('#graph-canvas').addEventListener('pointermove', ev => {
+  if ($('#graph-canvas').hasPointerCapture(ev.pointerId)) setGraphPointFromClientX(ev.clientX);
+});
+$('#graph-canvas').addEventListener('pointerup', ev => {
+  if ($('#graph-canvas').hasPointerCapture(ev.pointerId)) $('#graph-canvas').releasePointerCapture(ev.pointerId);
+});
+$('#graph-canvas').addEventListener('keydown', ev => {
+  if (!graphState || !['ArrowLeft', 'ArrowRight'].includes(ev.key)) return;
+  ev.preventDefault();
+  const step = (graphState.x2 - graphState.x1) / 20;
+  const base = graphManualX == null ? (graphState.x1 + graphState.x2) / 2 : graphManualX;
+  graphManualX = Math.max(graphState.x1, Math.min(graphState.x2, base + (ev.key === 'ArrowRight' ? step : -step)));
+  redrawGraph();
+});
+document.addEventListener('visibilitychange', () => { if (!document.hidden && current) redrawGraph(); });
 window.addEventListener('resize', () => current && redrawGraph());
 renderStart();
