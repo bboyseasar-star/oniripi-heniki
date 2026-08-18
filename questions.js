@@ -120,7 +120,11 @@ const HenikiQuestions = (() => {
     };
   };
   const make = level => {
-    const makers = level === 1 ? [() => bankA(1)] : level === 2 ? [() => bankA(2), bankB] : [() => bankA(3), bankB, bankC, bankD];
+    // Lv.1 / Lv.2 は同じ基礎問題で、グラフの視覚的な補助だけを段階的に外す。
+    // Lv.4 では目盛を必要とするグラフ読取り（bankD）を扱わない。
+    const makers = level <= 2 ? [() => bankA(1)]
+      : level === 3 ? [() => bankA(2), bankB]
+        : [() => bankA(3), bankB, bankC];
     return Array.from({ length: 5 }, () => choice(makers)());
   };
   return { make, tex, fmt, val, fx };

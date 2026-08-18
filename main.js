@@ -188,15 +188,21 @@ function redrawGraph(forceFull = false) {
   if (!current) return;
   if (graphAnimation) cancelAnimationFrame(graphAnimation);
   const reveal = forceFull || answered || current.type === 'D' ? 3 : hintsShown;
-  drawGraph(current, reveal);
+  drawGraph(current, reveal, performance.now(), graphVisuals());
   if (current.type === 'A' && reveal >= 1 && reveal < 3 && !document.hidden) {
     const animate = now => {
       if (!current || answered || current.type !== 'A' || hintsShown < 1 || hintsShown >= 3 || document.hidden) return;
-      drawGraph(current, reveal, now);
+      drawGraph(current, reveal, now, graphVisuals());
       graphAnimation = requestAnimationFrame(animate);
     };
     graphAnimation = requestAnimationFrame(animate);
   }
+}
+function graphVisuals() {
+  return {
+    showGrid: level !== 2,
+    showScale: level === 1
+  };
 }
 function niceStep(range) {
   if (range <= 12) return 1;
@@ -318,7 +324,7 @@ function drawYRange(ctx, yLo, yHi, py, axisX) {
   drawPoint(ctx, axisX, py(yLo), '#ef4444', 6);
   drawPoint(ctx, axisX, py(yHi), '#ef4444', 6);
 }
-function drawGraph(q, reveal, now = performance.now()) {
+function drawGraph(q, reveal, now = performance.now(), visuals = graphVisuals()) {
   const c = $('#graph-canvas'), dpr = window.devicePixelRatio || 1, rect = c.getBoundingClientRect();
   c.width = Math.max(1, rect.width * dpr); c.height = Math.max(1, rect.height * dpr);
   const ctx = c.getContext('2d'), w = rect.width, h = rect.height;
@@ -346,17 +352,19 @@ function drawGraph(q, reveal, now = performance.now()) {
   ctx.rect(left, top, plotW, plotH);
   ctx.clip();
 
-  for (let x = Math.ceil(xMin / (xStep / 2)) * (xStep / 2); x <= xMax + 1e-9; x += xStep / 2) {
-    const isMajor = Math.abs(x / xStep - Math.round(x / xStep)) < 1e-9;
-    ctx.strokeStyle = isMajor ? '#d6dee9' : '#edf2f7';
-    ctx.lineWidth = isMajor ? 1.2 : 0.7;
-    ctx.beginPath(); ctx.moveTo(px(x), top); ctx.lineTo(px(x), bottom); ctx.stroke();
-  }
-  for (let y = Math.ceil(yMin / (yStep / 2)) * (yStep / 2); y <= yMax + 1e-9; y += yStep / 2) {
-    const isMajor = Math.abs(y / yStep - Math.round(y / yStep)) < 1e-9;
-    ctx.strokeStyle = isMajor ? '#d6dee9' : '#edf2f7';
-    ctx.lineWidth = isMajor ? 1.2 : 0.7;
-    ctx.beginPath(); ctx.moveTo(left, py(y)); ctx.lineTo(right, py(y)); ctx.stroke();
+  if (visuals.showGrid) {
+    for (let x = Math.ceil(xMin / (xStep / 2)) * (xStep / 2); x <= xMax + 1e-9; x += xStep / 2) {
+      const isMajor = Math.abs(x / xStep - Math.round(x / xStep)) < 1e-9;
+      ctx.strokeStyle = isMajor ? '#d6dee9' : '#edf2f7';
+      ctx.lineWidth = isMajor ? 1.2 : 0.7;
+      ctx.beginPath(); ctx.moveTo(px(x), top); ctx.lineTo(px(x), bottom); ctx.stroke();
+    }
+    for (let y = Math.ceil(yMin / (yStep / 2)) * (yStep / 2); y <= yMax + 1e-9; y += yStep / 2) {
+      const isMajor = Math.abs(y / yStep - Math.round(y / yStep)) < 1e-9;
+      ctx.strokeStyle = isMajor ? '#d6dee9' : '#edf2f7';
+      ctx.lineWidth = isMajor ? 1.2 : 0.7;
+      ctx.beginPath(); ctx.moveTo(left, py(y)); ctx.lineTo(right, py(y)); ctx.stroke();
+    }
   }
 
   ctx.strokeStyle = '#334155';
@@ -407,19 +415,21 @@ function drawGraph(q, reveal, now = performance.now()) {
   }
   ctx.restore();
 
-  ctx.font = '600 13px Outfit, sans-serif';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'top';
-  ctx.fillStyle = '#64748b';
-  for (let x = Math.ceil(xMin / xStep) * xStep; x <= xMax + 1e-9; x += xStep) {
-    if (Math.abs(x) < 1e-9) continue;
-    ctx.fillText(graphNumber(x), px(x), clampY(0) + 8);
-  }
-  ctx.textAlign = 'left';
-  ctx.textBaseline = 'middle';
-  for (let y = Math.ceil(yMin / yStep) * yStep; y <= yMax + 1e-9; y += yStep) {
-    if (Math.abs(y) < 1e-9) continue;
-    ctx.fillText(graphNumber(y), clampX(0) + 8, py(y));
+  if (visuals.showScale) {
+    ctx.font = '600 13px Outfit, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.fillStyle = '#64748b';
+    for (let x = Math.ceil(xMin / xStep) * xStep; x <= xMax + 1e-9; x += xStep) {
+      if (Math.abs(x) < 1e-9) continue;
+      ctx.fillText(graphNumber(x), px(x), clampY(0) + 8);
+    }
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    for (let y = Math.ceil(yMin / yStep) * yStep; y <= yMax + 1e-9; y += yStep) {
+      if (Math.abs(y) < 1e-9) continue;
+      ctx.fillText(graphNumber(y), clampX(0) + 8, py(y));
+    }
   }
   ctx.font = '700 14px Outfit, sans-serif';
   ctx.fillStyle = '#334155';
@@ -470,7 +480,7 @@ $('#hint-btn').addEventListener('click', hint);
 $('#quit-btn').addEventListener('click', () => { if (!answered && current) reviews.push({ q: current.question, ok: false, ans: ansTex(current), process: '中断しました。', source: current }); result(); });
 $('#retry-btn').addEventListener('click', () => start());
 $('#home-btn').addEventListener('click', () => { setScreen('#screen-start'); renderStart(); });
-$('#reset-btn').addEventListener('click', () => { if (confirm('学習履歴と最高スコアをリセットしますか？')) { storage.del(`${KEY}-hist`); [1, 2, 3].forEach(l => storage.del(`${KEY}-high-${l}`)); renderStart(); } });
+$('#reset-btn').addEventListener('click', () => { if (confirm('学習履歴と最高スコアをリセットしますか？')) { storage.del(`${KEY}-hist`); [1, 2, 3, 4].forEach(l => storage.del(`${KEY}-high-${l}`)); renderStart(); } });
 $$('.hkey').forEach(b => b.addEventListener('click', () => insertKey(b.dataset.cmd)));
 function setGraphPointFromClientX(clientX) {
   if (!graphState || !current || current.type !== 'A' || hintsShown < 1 || answered) return;
