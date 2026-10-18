@@ -16,5 +16,76 @@ button{font-family:var(--font);cursor:pointer;border:0}.hidden{display:none!impo
 .hint-area{overflow:auto}.hint-list{display:grid;gap:9px;margin-top:10px}.hint-item{background:#fff7ed;border-left:5px solid var(--orange);border-radius:10px;padding:9px;line-height:1.55;font-weight:700}.hint-warning{margin-top:10px;background:#fef2f2;border:1px solid #fecaca;color:#991b1b;border-radius:10px;padding:9px;font-weight:900;line-height:1.45}.feedback-box{margin:0;min-width:0;max-height:154px;overflow:auto;font-weight:900;line-height:1.55}.feedback-box.ok{border-color:#86efac;background:#f0fdf4;color:#166534}.feedback-box.ng{border-color:#fdba74;background:#fff7ed;color:#9a3412}.feedback-box.giveup{border-color:#fecaca;background:#fef2f2;color:#991b1b}.feedback-box.pulse{animation:pulse .55s ease-in-out 2}@keyframes pulse{50%{transform:scale(1.02);box-shadow:0 0 0 6px rgba(249,115,22,.16)}}
 .quiz-footer{height:72px;position:fixed;left:0;right:0;bottom:0;background:rgba(255,255,255,.96);border-top:1px solid var(--line);padding:10px;display:flex;justify-content:center;gap:12px}.quiz-footer button{min-width:180px}
 .result-header{text-align:center}.result-header h2{font-size:32px}.result-score{font-size:52px;font-weight:900;color:var(--orange);margin:6px}.result-badge{font-size:19px;font-weight:900}.review-section{min-height:0;flex:1;margin-top:12px}.review-section h3{margin-bottom:8px}.review-list{height:100%;overflow:auto}.review-item{background:#f8fafc;border:1px solid var(--line);border-radius:12px;padding:10px;margin-top:8px;line-height:1.55}.result-actions{display:flex;gap:10px;justify-content:center;margin-top:12px}.result-actions button{flex:1}.graph-wrap{min-height:220px}.graph-canvas{touch-action:none;outline:none}.graph-canvas:focus{box-shadow:inset 0 0 0 3px #fed7aa;border-radius:8px}
-@media(max-width:860px){html,body{overflow:auto}.screen{height:auto;min-height:100vh}.start-card,.result-card{height:auto;min-height:calc(100vh - 28px)}.quiz-header{height:auto;grid-template-columns:1fr auto}.header-progress{grid-column:1/-1}.quiz-main{height:auto;margin-bottom:82px}.center-panel{grid-template-columns:1fr}.question-card{flex:none}.graph-wrap{flex:none;height:280px;min-height:280px}.response-row,.response-row.has-feedback{grid-template-columns:1fr}.answer-line.range-labeled{grid-template-columns:minmax(0,300px)}.range-label{justify-self:stretch}.feedback-box{max-height:none}.level-btns{grid-template-columns:1fr}.quiz-footer button{min-width:130px}.equation-display{font-size:21px}}
 .emoji-icon{font-family:"Noto Color Emoji","Apple Color Emoji","Segoe UI Emoji",sans-serif!important;font-weight:400!important;font-style:normal}
+
+/* △（分母のマイナス・0点）と、採点の一言（2026-10-18 採点修正） */
+.feedback-box.tri{border-color:#d97706;background:#fef3c7;color:#78350f}
+.feedback-box .fb-msg{display:block}
+.input-note.is-alert{color:#dc2626}
+
+/* ── 小さい画面（800×600・1024×600 など）でも、画面全体をスクロールさせずに1画面に収める（2026-10-18） ── */
+@media (max-height:700px){
+  .screen{padding:8px}
+  .quiz-header{height:50px;padding:6px 10px}
+  .quiz-main{height:calc(100vh - 138px);margin:8px auto}
+  .quiz-footer{height:56px;padding:6px}
+  .quiz-footer button{padding:10px 18px}
+  .center-panel{gap:10px}
+  .work-panel{gap:8px}
+  .question-card,.answer-zone,.hint-area,.feedback-box{padding:8px 10px;border-radius:14px}
+  .question-label{margin-bottom:2px;font-size:14px}
+  .equation-display{font-size:18px;min-height:0;line-height:1.35}
+  .question-extra{font-size:13px;margin-top:4px}
+  .graph-wrap{min-height:100px;margin-top:4px;padding:4px}
+  .response-row{min-height:0}
+  math-field{min-height:38px;font-size:18px;padding:4px}
+  .answer-line{font-size:18px}
+  .input-note{font-size:11px;margin-top:4px}
+  .helper-keys{margin-top:4px}
+  .hkey{padding:4px 10px}
+  .feedback-box{font-size:13px;line-height:1.45;max-height:none}
+  .hint-item,.hint-warning{font-size:13px;padding:7px}
+  .start-card,.result-card{height:calc(100vh - 16px);padding:12px 16px}
+  .app-logo{font-size:30px}.app-title{font-size:28px}.app-subtitle{font-size:15px;margin-bottom:6px}
+  .level-btn{padding:7px 6px}.level-btn b{font-size:16px}
+  .highscore-box,.history-box{margin-top:8px;padding:8px 12px}.highscore-box strong{font-size:22px}
+  .history-list{max-height:none}
+  .lg{margin-top:8px;padding:10px 18px}
+  .result-header h2{font-size:22px}.result-score{font-size:34px;margin:2px}.result-badge{font-size:16px}
+  .review-section{margin-top:6px}.review-section h3{margin-bottom:4px;font-size:16px}
+  .review-item{font-size:13px;padding:7px;margin-top:6px}
+  .result-actions{margin-top:8px}.result-actions button{padding:10px 12px}
+}
+@media (max-width:860px){
+  .quiz-header{grid-template-columns:auto 1fr minmax(110px,170px) auto;gap:8px}
+  .header-brand{font-size:14px}
+  .center-panel{grid-template-columns:minmax(0,1fr) 200px;gap:8px}
+  .response-row{grid-template-columns:minmax(0,1fr)}
+  .response-row.has-feedback{grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr)}
+  .answer-line.range-labeled{grid-template-columns:72px minmax(0,1fr)}
+  .mf-container{width:78px}
+  .quiz-footer button{min-width:140px}
+}
+/* スマートフォンの縦向きなど、さらに狭い画面だけは縦に並べてスクロールする（対象の Chromebook では使わない） */
+@media (max-width:560px){
+  html,body{overflow:auto}.screen{height:auto;min-height:100vh}.start-card,.result-card{height:auto;min-height:calc(100vh - 16px)}
+  .quiz-header{height:auto;grid-template-columns:1fr auto}.header-progress{grid-column:1/-1}
+  .quiz-main{height:auto;margin-bottom:82px}.center-panel{grid-template-columns:1fr}.question-card{flex:none}
+  .graph-wrap{flex:none;height:240px;min-height:240px}.response-row,.response-row.has-feedback{grid-template-columns:1fr}
+  .level-btns{grid-template-columns:1fr 1fr}.quiz-footer button{min-width:130px}
+}
+
+/* 確認の画面（confirm の代わり） */
+.modal-overlay{position:fixed;inset:0;z-index:1000;background:rgba(17,24,39,.55);display:flex;align-items:center;justify-content:center;padding:16px}
+.modal-card{background:#fff;border-radius:20px;box-shadow:0 24px 60px rgba(17,24,39,.35);width:min(420px,92vw);padding:22px 20px 18px;text-align:center;display:flex;flex-direction:column;gap:10px}
+.modal-title{font-size:22px;font-weight:900}
+.modal-message{font-size:15px;color:var(--muted);line-height:1.6}
+.modal-actions{display:flex;gap:10px;margin-top:6px}
+.modal-btn{flex:1;min-height:46px;border-radius:12px;font-weight:900;font-size:16px}
+.modal-btn--cancel{background:#fff;border:2px solid var(--line);color:var(--muted)}
+.modal-btn--ok{background:linear-gradient(135deg,#fb923c,#ef4444);color:#fff}
+.modal-card.is-danger .modal-btn--ok{background:linear-gradient(135deg,#ef4444,#b91c1c)}
+
+/* 結果の振り返りは、ボタンの下にもぐらず、枠の中だけでスクロールする */
+.review-section{display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.review-list{flex:1;min-height:0;height:auto}

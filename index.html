@@ -20,7 +20,7 @@
     };
   </script>
   <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=20261018c">
 </head>
 <body>
   <div id="screen-start" class="screen active">
@@ -73,7 +73,7 @@
           <div id="response-row" class="response-row">
             <div class="answer-zone">
               <div id="answer-grid" class="answer-grid"></div>
-              <p id="input-note" class="input-note">※変域は「最小値≦文字≦最大値」まで入力してね。</p>
+              <p id="input-note" class="input-note">※変域は「最小値≦文字≦最大値」の形で入力してね。分数は約分して書こう。割り切れない数は分数で。</p>
               <div class="helper-keys">
                 <button id="le-key" class="hkey" data-cmd="le">≦</button>
                 <button class="hkey" data-cmd="frac">分数</button>
@@ -118,9 +118,22 @@
     </main>
   </div>
 
+  <!-- 確認の画面（confirm の代わり） -->
+  <div id="modal-overlay" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal-card" id="modal-card">
+      <h2 class="modal-title" id="modal-title">確認</h2>
+      <p class="modal-message" id="modal-message"></p>
+      <div class="modal-actions">
+        <button id="modal-cancel" class="modal-btn modal-btn--cancel">キャンセル</button>
+        <button id="modal-ok" class="modal-btn modal-btn--ok">OK</button>
+      </div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
   <script src="https://unpkg.com/mathlive@0.98.4/dist/mathlive.min.js"></script>
-  <script src="questions.js"></script>
-  <script src="main.js"></script>
+  <script src="grader-core.js?v=20261018c"></script>
+  <script src="questions.js?v=20261018c"></script>
+  <script src="main.js?v=20261018c"></script>
 </body>
 </html>
